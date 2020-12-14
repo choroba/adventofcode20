@@ -8,16 +8,12 @@ use List::Util qw{ sum };
 
 sub from_bin {
     my ($bin) = @_;
-    my ($x, $y) = unpack 'N2', pack 'B64', ('0' x 28) . $bin;
-    return $x * 2 ** 32 + $y
+    return do { no warnings 'portable'; oct "0b$bin" }
 }
 
 sub to_bin {
     my ($dec) = @_;
-    my $x = int($dec / 2 ** 32);
-    my $y = $dec % 2 ** 32;
-    return join "", substr(unpack('B32',  pack 'N', $x), -4),
-                    unpack 'B32', pack 'N', $y;
+    sprintf '%036b', $dec
 }
 
 sub expand {

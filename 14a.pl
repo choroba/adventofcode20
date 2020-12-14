@@ -8,8 +8,7 @@ use List::Util qw{ sum };
 
 sub from_bin {
     my ($bin) = @_;
-    my ($x, $y) = unpack 'N2', pack 'B64', ('0' x 28) . $bin;
-    return $x * 2 ** 32 + $y
+    return do { no warnings 'portable'; oct "0b$bin" }
 }
 
 my ($mask, %mem);
