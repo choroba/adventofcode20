@@ -53,6 +53,21 @@ use ARGV::OrDATA;
         $self->_neighbours->[ $w + 1 ][ $z + 1 ][ $y + 1 ][ $x + 1 ]
     }
 
+    sub next {
+        my ($self) = @_;
+        my @next;
+        $self->iter(sub {
+            my ($x, $y, $z, $w) = @_;
+            my $neighbours = $self->neighbours($x - 1, $y - 1, $z - 1, $w - 1);
+            my $is_active = $self->at($x - 1, $y - 1, $z - 1, $w - 1);
+            $next[$w][$z][$y][$x]
+                = $is_active
+                ? ($neighbours == 2 || $neighbours == 3)
+                : ($neighbours == 3);
+        }, 2);
+        return \@next
+    }
+
     sub _build_time   { scalar @{ $_[0]->grid } }
     sub _build_depth  { scalar @{ $_[0]->grid->[0] } }
     sub _build_height { scalar @{ $_[0]->grid->[0][0] } }
@@ -91,17 +106,7 @@ while (<>) {
 my $grid = 'Grid'->new(grid => [[\@in]]);
 
 for (1 .. 6) {
-    my @next;
-    $grid->iter(sub {
-        my ($x, $y, $z, $w) = @_;
-        my $neighbours = $grid->neighbours($x - 1, $y - 1, $z - 1, $w - 1);
-        my $is_active = $grid->at($x - 1, $y - 1, $z - 1, $w - 1);
-        $next[$w][$z][$y][$x]
-            = $is_active
-            ? ($neighbours == 2 || $neighbours == 3)
-            : ($neighbours == 3);
-    }, 2);
-    $grid = 'Grid'->new(grid => \@next);
+    $grid = 'Grid'->new(grid => $grid->next);
 }
 
 say $grid->count;
