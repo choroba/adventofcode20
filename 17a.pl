@@ -22,16 +22,25 @@ use ARGV::OrDATA;
                 && $self->grid->[$z][$y][$x]) ? 1 : 0
     }
 
-    sub count {
-        my ($self) = @_;
-        my $c = 0;
-        for my $z (0 .. $self->depth - 1) {
-            for my $y (0 .. $self->height - 1) {
-                for my $x (0 .. $self->width - 1) {
-                    ++$c if $self->at($x, $y, $z);
+    sub iter {
+        my ($self, $code, $m) = @_;
+        $m //= 0;
+        for my $z (0 .. $self->depth - 1 + $m) {
+            for my $y (0 .. $self->height - 1 + $m) {
+                for my $x (0 .. $self->width - 1 + $m) {
+                    $code->($x, $y, $z);
                 }
             }
         }
+    }
+
+    sub count {
+        my ($self) = @_;
+        my $c = 0;
+        $self->iter(sub {
+            my ($x, $y, $z) = @_;
+            ++$c if $self->at($x, $y, $z);
+        });
         return $c
     }
 
@@ -47,22 +56,19 @@ use ARGV::OrDATA;
     sub _build__neighbours {
         my ($self) = @_;
         my @n;
-        for my $z (0 .. $self->depth - 1) {
-            for my $y (0 .. $self->height - 1) {
-                for my $x (0 .. $self->width - 1) {
-                    for my $i (-1 .. 1) {
-                        for my $j (-1 .. 1) {
-                            for my $k (-1 .. 1) {
-                                next unless $i || $j || $k;
+        $self->iter(sub {
+            my ($x, $y, $z) = @_;
+            for my $i (-1 .. 1) {
+                for my $j (-1 .. 1) {
+                    for my $k (-1 .. 1) {
+                        next unless $i || $j || $k;
 
-                                $n[ $z + $i + 1 ][ $y + $j + 1 ][ $x + $k + 1 ]
-                                     += $self->at($x, $y, $z);
-                            }
-                        }
+                        $n[ $z + $i + 1 ][ $y + $j + 1 ][ $x + $k + 1 ]
+                            += $self->at($x, $y, $z);
                     }
                 }
             }
-        }
+        });
         return \@n
     }
 }
@@ -76,18 +82,15 @@ my $grid = 'Grid'->new(grid => [\@in]);
 
 for (1 .. 6) {
     my @next;
-    for my $z (-1 .. $grid->depth) {
-        for my $y (-1 .. $grid->height) {
-            for my $x (-1 .. $grid->width) {
-                my $neighbours = $grid->neighbours($x, $y, $z);
-                my $is_active = $grid->at($x, $y, $z);
-                $next[ $z + 1 ][ $y + 1 ][ $x + 1 ]
-                    = $is_active
-                    ? ($neighbours == 2 || $neighbours == 3)
-                    : ($neighbours == 3);
-            }
-        }
-    }
+    $grid->iter(sub {
+        my ($x, $y, $z) = @_;
+        my $neighbours = $grid->neighbours($x - 1, $y - 1, $z - 1);
+        my $is_active = $grid->at($x - 1, $y - 1, $z - 1);
+        $next[$z][$y][$x]
+            = $is_active
+            ? ($neighbours == 2 || $neighbours == 3)
+            : ($neighbours == 3);
+    }, 2);
     $grid = 'Grid'->new(grid => \@next);
 }
 
