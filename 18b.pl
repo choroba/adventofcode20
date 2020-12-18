@@ -11,10 +11,10 @@ my $DSL = << '__DSL__';
 :default ::= action => [name,values]
 lexeme default = latm => 1
 
-Expression ::= ('(') Expression (')') assoc => group action => ::first
-             | digits                                action => ::first
-             || Expression '+' Expression            action => main::operate
-             || Expression '*' Expression            action => main::operate
+Expression ::= ('(') Expression (')')  assoc => group  action => ::first
+             | digits                                  action => ::first
+            || Expression '+' Expression               action => main::operate
+            || Expression '*' Expression               action => main::operate
 
 whitespace ~ [\s]+
 digits     ~ [\d]+

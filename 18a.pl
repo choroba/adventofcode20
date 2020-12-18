@@ -13,7 +13,7 @@ lexeme default = latm => 1
 
 Expression ::= ('(') Expression (')')  assoc => group  action => ::first
              | digits                                  action => ::first
-             || Expression op Expression               action => main::operate
+            || Expression op Expression                action => main::operate
 
 whitespace ~ [\s]+
 digits     ~ [\d]+
